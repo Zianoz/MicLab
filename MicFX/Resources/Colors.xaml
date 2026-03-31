@@ -1,0 +1,30 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Base palette -->
+    <Color x:Key="BackgroundColor">#FF1A1A1A</Color>
+    <Color x:Key="SurfaceColor">#FF242424</Color>
+    <Color x:Key="SurfaceHighColor">#FF2E2E2E</Color>
+    <Color x:Key="BorderColor">#FF3A3A3A</Color>
+    <Color x:Key="AccentColor">#FF00AAFF</Color>
+    <Color x:Key="AccentHoverColor">#FF33BBFF</Color>
+    <Color x:Key="TextPrimaryColor">#FFEEEEEE</Color>
+    <Color x:Key="TextSecondaryColor">#FF888888</Color>
+    <Color x:Key="MeterGreenColor">#FF00CC44</Color>
+    <Color x:Key="MeterYellowColor">#FFFFCC00</Color>
+    <Color x:Key="MeterRedColor">#FFFF3333</Color>
+
+    <!-- Brushes -->
+    <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource BackgroundColor}"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource SurfaceColor}"/>
+    <SolidColorBrush x:Key="SurfaceHighBrush" Color="{StaticResource SurfaceHighColor}"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource BorderColor}"/>
+    <SolidColorBrush x:Key="AccentBrush" Color="{StaticResource AccentColor}"/>
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="{StaticResource AccentHoverColor}"/>
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimaryColor}"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondaryColor}"/>
+    <SolidColorBrush x:Key="MeterGreenBrush" Color="{StaticResource MeterGreenColor}"/>
+    <SolidColorBrush x:Key="MeterYellowBrush" Color="{StaticResource MeterYellowColor}"/>
+    <SolidColorBrush x:Key="MeterRedBrush" Color="{StaticResource MeterRedColor}"/>
+
+</ResourceDictionary>

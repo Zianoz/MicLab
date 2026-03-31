@@ -1,0 +1,55 @@
+<UserControl x:Class="MicFX.Views.MeterPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:conv="clr-namespace:MicFX.Converters">
+    <UserControl.Resources>
+        <conv:LevelToHeightConverter x:Key="LevelH"/>
+    </UserControl.Resources>
+
+    <StackPanel Margin="8,4,8,8">
+        <TextBlock Text="LEVELS" Style="{StaticResource SectionHeader}"/>
+
+        <Grid Height="120">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- INPUT meter -->
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="IN" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center"/>
+                <Border Background="#FF111111" Height="100" VerticalAlignment="Bottom">
+                    <Grid>
+                        <!-- Green zone (0–70%) -->
+                        <Rectangle Fill="{StaticResource MeterGreenBrush}"
+                                   VerticalAlignment="Bottom"
+                                   Height="{Binding InputRmsDisplay, Converter={StaticResource LevelH}, ConverterParameter=100}"/>
+                        <!-- Peak indicator -->
+                        <Rectangle Fill="{StaticResource MeterRedBrush}"
+                                   Height="2"
+                                   VerticalAlignment="Bottom"
+                                   Margin="0,0,0,0">
+                            <Rectangle.RenderTransform>
+                                <TranslateTransform Y="{Binding InputPeakY}"/>
+                            </Rectangle.RenderTransform>
+                        </Rectangle>
+                    </Grid>
+                </Border>
+            </StackPanel>
+
+            <!-- Spacer -->
+            <Border Grid.Column="1"/>
+
+            <!-- OUTPUT meter -->
+            <StackPanel Grid.Column="2">
+                <TextBlock Text="OUT" Style="{StaticResource FieldLabel}" HorizontalAlignment="Center"/>
+                <Border Background="#FF111111" Height="100" VerticalAlignment="Bottom">
+                    <Rectangle Fill="{StaticResource MeterGreenBrush}"
+                               VerticalAlignment="Bottom"
+                               Height="{Binding OutputRmsDisplay, Converter={StaticResource LevelH}, ConverterParameter=100}"/>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </StackPanel>
+</UserControl>
