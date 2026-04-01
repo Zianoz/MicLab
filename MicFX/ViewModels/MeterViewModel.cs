@@ -38,17 +38,17 @@ public partial class MeterViewModel : ObservableObject, IDisposable
             return;
         }
 
-        float rms = _engine.InputRms;
-        float peak = _engine.InputPeak;
+        float inputRms = _engine.InputRms;
+        float inputPeak = _engine.InputPeak;
+        float outputRms = _engine.OutputRms;
 
-        // Smooth RMS
-        InputRmsDisplay = InputRmsDisplay + Smoothing * (rms - InputRmsDisplay);
-        OutputRmsDisplay = InputRmsDisplay; // TODO Phase 5 refactor: separate output level
+        InputRmsDisplay = InputRmsDisplay + Smoothing * (NormalizeLevel(inputRms) - InputRmsDisplay);
+        OutputRmsDisplay = OutputRmsDisplay + Smoothing * (NormalizeLevel(outputRms) - OutputRmsDisplay);
 
         // Peak hold
-        if (peak > _peakHold)
+        if (inputPeak > _peakHold)
         {
-            _peakHold = peak;
+            _peakHold = inputPeak;
             _peakHoldFrames = PeakHoldDuration;
         }
         else if (_peakHoldFrames > 0)
@@ -62,6 +62,13 @@ public partial class MeterViewModel : ObservableObject, IDisposable
 
         // Y position: 0 = top (loud), 100 = bottom (quiet)
         InputPeakY = -(double)_peakHold * 100;
+    }
+
+    private static double NormalizeLevel(float linear)
+    {
+        const float floorDb = -60f;
+        float db = 20f * MathF.Log10(MathF.Max(linear, 1e-5f));
+        return Math.Clamp((db - floorDb) / -floorDb, 0f, 1f);
     }
 
     public void Dispose()

@@ -7,50 +7,63 @@
         <conv:DbDisplayConverter x:Key="DbDisplay"/>
     </UserControl.Resources>
 
-    <DockPanel>
-        <!-- EQ frequency response curve -->
-        <Border DockPanel.Dock="Top" Height="120" Background="#FF111111" Margin="8,8,8,4">
-            <Canvas x:Name="EqCurveCanvas" ClipToBounds="True">
-                <!-- Drawn in code-behind via EqCurveRenderer -->
-                <Polyline x:Name="EqCurveLine"
-                          Stroke="{StaticResource AccentBrush}"
-                          StrokeThickness="2"
-                          Points="0,60 900,60"/>
-                <!-- Center line (0 dB) -->
-                <Line X1="0" Y1="60" X2="900" Y2="60"
-                      Stroke="#FF333333" StrokeThickness="1" StrokeDashArray="4 4"/>
-            </Canvas>
-        </Border>
+    <Grid Margin="8,8,8,10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="8"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
 
-        <!-- EQ sliders -->
-        <ScrollViewer DockPanel.Dock="Bottom" HorizontalScrollBarVisibility="Auto"
-                      VerticalScrollBarVisibility="Disabled">
-            <ItemsControl ItemsSource="{Binding Bands}" Margin="8,0,8,8">
+        <Grid MaxWidth="860" HorizontalAlignment="Stretch">
+            <Border Height="120"
+                    Background="#FF0A101A"
+                    BorderBrush="{StaticResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="12">
+                <Canvas x:Name="EqCurveCanvas" ClipToBounds="True" Margin="10,8">
+                    <Line X1="0" Y1="52" X2="{Binding ActualWidth, ElementName=EqCurveCanvas}" Y2="52"
+                          Stroke="#FF324865" StrokeThickness="1" StrokeDashArray="4 4"/>
+                    <Path x:Name="EqCurveFill" Fill="#184CC9F0"/>
+                    <Path x:Name="EqCurvePath"
+                          Stroke="{StaticResource AccentBrush}"
+                          StrokeThickness="1.8"
+                          StrokeLineJoin="Round"/>
+                </Canvas>
+            </Border>
+        </Grid>
+
+        <Border Grid.Row="2"
+                MaxWidth="860"
+                HorizontalAlignment="Stretch"
+                Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="1"
+                CornerRadius="12"
+                Padding="10,12,10,8">
+            <ItemsControl ItemsSource="{Binding Bands}">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal"/>
+                        <UniformGrid Rows="1" Columns="10"/>
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Width="52" Margin="2,0" HorizontalAlignment="Center">
-                            <!-- dB value label -->
+                        <StackPanel Margin="2,0" HorizontalAlignment="Center"
+                                    ToolTip="{Binding Description}"
+                                    ToolTipService.ShowDuration="12000">
                             <TextBlock Text="{Binding GainDb, Converter={StaticResource DbDisplay}}"
                                        Style="{StaticResource FieldLabel}"
                                        HorizontalAlignment="Center"
                                        Margin="0,0,0,2"/>
-
-                            <!-- Vertical slider -->
                             <Slider Orientation="Vertical"
-                                    Height="120"
+                                    Height="112"
+                                    Width="32"
                                     Minimum="-12" Maximum="12"
                                     Value="{Binding GainDb, Mode=TwoWay}"
                                     TickFrequency="3"
                                     TickPlacement="BottomRight"
                                     Style="{StaticResource DarkSlider}"
                                     HorizontalAlignment="Center"/>
-
-                            <!-- Frequency label -->
                             <TextBlock Text="{Binding FrequencyLabel}"
                                        Style="{StaticResource FieldLabel}"
                                        HorizontalAlignment="Center"
@@ -59,6 +72,6 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
-        </ScrollViewer>
-    </DockPanel>
+        </Border>
+    </Grid>
 </UserControl>

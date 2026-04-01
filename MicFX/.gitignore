@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+.codex-build-verify/
+.dotnet/
+
+*.user
+*.suo
+*.cache
+*.pdb

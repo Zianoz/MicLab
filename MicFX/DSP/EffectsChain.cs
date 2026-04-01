@@ -8,9 +8,11 @@ namespace MicFX.DSP;
 /// </summary>
 public class EffectsChain : ISampleProvider
 {
-    public EqProcessor Eq { get; }
-    public NoiseGate Gate { get; }
-    public Compressor Compressor { get; }
+    public FilterBank       Filters          { get; }
+    public EqProcessor      Eq               { get; }
+    public NoiseSuppressor  NoiseSuppressor  { get; }
+    public NoiseGate        Gate             { get; }
+    public Compressor       Compressor       { get; }
 
     private readonly ISampleProvider _tail;
 
@@ -18,10 +20,12 @@ public class EffectsChain : ISampleProvider
 
     public EffectsChain(ISampleProvider source)
     {
-        Eq = new EqProcessor(source);
-        Gate = new NoiseGate(Eq);
-        Compressor = new Compressor(Gate);
-        _tail = Compressor;
+        Filters         = new FilterBank(source);
+        Eq              = new EqProcessor(Filters);
+        NoiseSuppressor = new NoiseSuppressor(Eq);
+        Gate            = new NoiseGate(NoiseSuppressor);
+        Compressor      = new Compressor(Gate);
+        _tail           = Compressor;
     }
 
     public int Read(float[] buffer, int offset, int count)

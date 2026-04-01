@@ -9,6 +9,7 @@ public class Compressor : ISampleProvider
 {
     private readonly ISampleProvider _source;
     private float _sampleRate;
+    private volatile bool _enabled = true;
 
     // Parameters — volatile for thread-safe cross-thread reads
     private volatile float _thresholdLinear = DbToLinear(-18f);
@@ -50,6 +51,19 @@ public class Compressor : ISampleProvider
 
     public void SetTimings(float attackMs, float releaseMs) => UpdateCoeffs(attackMs, releaseMs);
 
+    public void SetEnabled(bool enabled)
+    {
+        _enabled = enabled;
+        if (enabled)
+            return;
+
+        _gainReduction = 1f;
+        _rmsLevel = 0f;
+        _sumSq = 0f;
+        _rmsIndex = 0;
+        Array.Clear(_rmsBuffer);
+    }
+
     private void UpdateCoeffs(float attackMs, float releaseMs)
     {
         _attackCoeff = 1f - MathF.Exp(-1f / (_sampleRate * attackMs / 1000f));
@@ -59,6 +73,9 @@ public class Compressor : ISampleProvider
     public int Read(float[] buffer, int offset, int count)
     {
         int read = _source.Read(buffer, offset, count);
+        if (!_enabled)
+            return read;
+
         float threshold = _thresholdLinear;
         float ratio = _ratio;
         float makeup = _makeupLinear;

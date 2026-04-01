@@ -18,15 +18,21 @@ public class AudioEngine : IDisposable
     public EffectsChain? Effects { get; private set; }
 
     // Convenience accessors
-    public EqProcessor? Eq => Effects?.Eq;
-    public NoiseGate? Gate => Effects?.Gate;
-    public Compressor? Compressor => Effects?.Compressor;
+    public FilterBank?      Filters          => Effects?.Filters;
+    public EqProcessor?     Eq               => Effects?.Eq;
+    public NoiseSuppressor? NoiseSuppressor  => Effects?.NoiseSuppressor;
+    public NoiseGate?       Gate             => Effects?.Gate;
+    public Compressor?      Compressor       => Effects?.Compressor;
 
     // Latest level values written from audio thread, read from UI timer
     private volatile float _inputRms;
     private volatile float _inputPeak;
+    private volatile float _outputRms;
+    private volatile float _outputPeak;
     public float InputRms => _inputRms;
     public float InputPeak => _inputPeak;
+    public float OutputRms => _outputRms;
+    public float OutputPeak => _outputPeak;
 
     // Raised when the pipeline stops unexpectedly (device removed, etc.)
     public event Action<string>? PipelineError;
@@ -66,10 +72,15 @@ public class AudioEngine : IDisposable
                     chainRef = new EffectsChain(source);
                     return chainRef;
                 },
-                LevelCallback = (rms, peak) =>
+                InputLevelCallback = (rms, peak) =>
                 {
                     _inputRms = rms;
                     _inputPeak = peak;
+                },
+                OutputLevelCallback = (rms, peak) =>
+                {
+                    _outputRms = rms;
+                    _outputPeak = peak;
                 },
                 ErrorCallback = msg => PipelineError?.Invoke(msg),
                 StatusCallback = msg => PipelineError?.Invoke(msg)
@@ -102,6 +113,8 @@ public class AudioEngine : IDisposable
             Effects = null;
             _inputRms = 0f;
             _inputPeak = 0f;
+            _outputRms = 0f;
+            _outputPeak = 0f;
         }
     }
 

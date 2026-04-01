@@ -8,54 +8,85 @@
         <BooleanToVisibilityConverter x:Key="BoolVis"/>
     </UserControl.Resources>
 
-    <StackPanel Margin="8">
+    <Border Style="{StaticResource CardBorder}">
+        <StackPanel>
+            <TextBlock Text="Audio Routing"
+                       FontSize="20"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource TextPrimaryBrush}"/>
+            <TextBlock Text="Choose your source, route target, and monitoring output."
+                       Foreground="{StaticResource TextSecondaryBrush}"
+                       Margin="0,4,0,18"/>
 
-        <!-- INPUT -->
-        <TextBlock Text="INPUT" Style="{StaticResource SectionHeader}"/>
-        <TextBlock Text="Microphone" Style="{StaticResource FieldLabel}"/>
-        <ComboBox ItemsSource="{Binding InputDevices}"
-                  SelectedItem="{Binding SelectedInput}"
-                  DisplayMemberPath="FriendlyName"
-                  Style="{StaticResource DarkComboBox}"
-                  Margin="0,0,0,10"/>
+            <Border Style="{StaticResource CardBorder}" Background="{StaticResource SurfaceHighBrush}" Padding="14" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="INPUT" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="Microphone Source" Style="{StaticResource FieldLabel}"/>
+                    <ComboBox ItemsSource="{Binding InputDevices}"
+                              SelectedItem="{Binding SelectedInput}"
+                              DisplayMemberPath="DisplayName"
+                              Style="{StaticResource DarkComboBox}"/>
+                </StackPanel>
+            </Border>
 
-        <!-- OUTPUT -->
-        <TextBlock Text="OUTPUT" Style="{StaticResource SectionHeader}"/>
-        <TextBlock Text="Virtual Cable" Style="{StaticResource FieldLabel}"/>
-        <ComboBox ItemsSource="{Binding OutputDevices}"
-                  SelectedItem="{Binding SelectedOutput}"
-                  DisplayMemberPath="FriendlyName"
-                  Style="{StaticResource DarkComboBox}"
-                  Margin="0,0,0,4"/>
+            <Border Style="{StaticResource CardBorder}" Background="{StaticResource SurfaceHighBrush}" Padding="14" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="OUTPUT" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="Route To App / Virtual Cable" Style="{StaticResource FieldLabel}"/>
+                    <TextBlock Text="For VB-CABLE: choose CABLE Input here. In the other app, choose CABLE Output as the microphone/input."
+                               Foreground="{StaticResource TextSecondaryBrush}"
+                               TextWrapping="Wrap"
+                               FontSize="11"
+                               Margin="0,0,0,8"/>
+                    <ComboBox ItemsSource="{Binding OutputDevices}"
+                              SelectedItem="{Binding SelectedOutput}"
+                              DisplayMemberPath="DisplayName"
+                              Style="{StaticResource DarkComboBox}"
+                              Margin="0,0,0,8"/>
 
-        <TextBlock Text="No virtual cable found. Install VB-CABLE to route audio to apps."
-                   TextWrapping="Wrap"
-                   Foreground="#FFFF8800"
-                   FontSize="10"
-                   Visibility="{Binding NoVirtualCableWarning, Converter={StaticResource BoolVis}}"
-                   Margin="0,0,0,6"/>
+                    <Border Background="{StaticResource AccentSoftBrush}"
+                            BorderBrush="{StaticResource BorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="10"
+                            Padding="10"
+                            Visibility="{Binding NoVirtualCableWarning, Converter={StaticResource BoolVis}}">
+                        <TextBlock Text="No route target found. VB-CABLE appears here as the render device named CABLE Input. The receiving app should use CABLE Output."
+                                   TextWrapping="Wrap"
+                                   Foreground="{StaticResource WarningBrush}"
+                                   FontSize="11"/>
+                    </Border>
+                </StackPanel>
+            </Border>
 
-        <!-- MONITOR -->
-        <TextBlock Text="MONITOR" Style="{StaticResource SectionHeader}" Margin="0,6,0,0"/>
-        <TextBlock Text="Headphones" Style="{StaticResource FieldLabel}"/>
-        <ComboBox ItemsSource="{Binding MonitorDevices}"
-                  SelectedItem="{Binding SelectedMonitor}"
-                  DisplayMemberPath="FriendlyName"
-                  Style="{StaticResource DarkComboBox}"
-                  Margin="0,0,0,6"/>
+            <Border Style="{StaticResource CardBorder}" Background="{StaticResource SurfaceHighBrush}" Padding="14">
+                <StackPanel>
+                    <TextBlock Text="MONITOR" Style="{StaticResource SectionHeader}"/>
+                    <TextBlock Text="Headphones" Style="{StaticResource FieldLabel}"/>
+                    <ComboBox ItemsSource="{Binding MonitorDevices}"
+                              SelectedItem="{Binding SelectedMonitor}"
+                              DisplayMemberPath="DisplayName"
+                              Style="{StaticResource DarkComboBox}"
+                              Margin="0,0,0,12"/>
 
-        <TextBlock Text="Monitor Volume" Style="{StaticResource FieldLabel}"/>
-        <Slider Minimum="0" Maximum="1"
-                Value="{Binding MonitorVolume}"
-                Style="{StaticResource DarkSlider}"
-                IsEnabled="{Binding MonitorMuted, Converter={StaticResource InvBool}}"
-                Margin="0,0,0,6"/>
+                    <DockPanel Margin="0,0,0,4">
+                        <TextBlock Text="Monitor Volume" Style="{StaticResource FieldLabel}" DockPanel.Dock="Left"/>
+                        <TextBlock Text="{Binding MonitorVolume, StringFormat={}{0:P0}}"
+                                   Foreground="{StaticResource AccentBrush}"
+                                   FontWeight="SemiBold"
+                                   DockPanel.Dock="Right"/>
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="1"
+                            Value="{Binding MonitorVolume}"
+                            Style="{StaticResource DarkSlider}"
+                            IsEnabled="{Binding MonitorMuted, Converter={StaticResource InvBool}}"
+                            Margin="0,0,0,12"/>
 
-        <Button Content="{Binding MonitorMuted, Converter={StaticResource MuteLabel}}"
-                Command="{Binding ToggleMuteCommand}"
-                Style="{StaticResource DarkButton}"
-                HorizontalAlignment="Left"
-                Width="70"/>
-
-    </StackPanel>
+                    <Button Content="{Binding MonitorMuted, Converter={StaticResource MuteLabel}}"
+                            Command="{Binding ToggleMuteCommand}"
+                            Style="{StaticResource DarkButton}"
+                            HorizontalAlignment="Stretch"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </Border>
 </UserControl>

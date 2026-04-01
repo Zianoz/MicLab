@@ -8,8 +8,11 @@ public class AudioDeviceInfo
     public string Id { get; init; } = "";
     public string FriendlyName { get; init; } = "";
     public bool IsVirtualCable { get; init; }
+    public DeviceState State { get; init; }
+    public bool IsAvailable => State == DeviceState.Active;
+    public string DisplayName => IsAvailable ? FriendlyName : $"{FriendlyName} ({State})";
 
-    public override string ToString() => FriendlyName;
+    public override string ToString() => DisplayName;
 }
 
 public class AudioDeviceManager : IDisposable, IMMNotificationClient
@@ -33,19 +36,26 @@ public class AudioDeviceManager : IDisposable, IMMNotificationClient
         var list = new List<AudioDeviceInfo>();
         try
         {
-            var devices = _enumerator.EnumerateAudioEndPoints(flow, DeviceState.Active);
+            var devices = _enumerator.EnumerateAudioEndPoints(
+                flow,
+                DeviceState.Active | DeviceState.Disabled | DeviceState.Unplugged);
             foreach (var d in devices)
             {
                 list.Add(new AudioDeviceInfo
                 {
                     Id = d.ID,
                     FriendlyName = d.FriendlyName,
-                    IsVirtualCable = IsVirtual(d.FriendlyName)
+                    IsVirtualCable = IsVirtual(d.FriendlyName),
+                    State = d.State
                 });
             }
         }
         catch { /* device enumeration can fail transiently */ }
-        return list;
+        return list
+            .OrderByDescending(d => d.IsAvailable)
+            .ThenByDescending(d => d.IsVirtualCable)
+            .ThenBy(d => d.FriendlyName, StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     public AudioDeviceInfo? GetDefaultCapture()
@@ -53,7 +63,7 @@ public class AudioDeviceManager : IDisposable, IMMNotificationClient
         try
         {
             var d = _enumerator.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Communications);
-            return new AudioDeviceInfo { Id = d.ID, FriendlyName = d.FriendlyName, IsVirtualCable = IsVirtual(d.FriendlyName) };
+            return new AudioDeviceInfo { Id = d.ID, FriendlyName = d.FriendlyName, IsVirtualCable = IsVirtual(d.FriendlyName), State = d.State };
         }
         catch { return null; }
     }
@@ -63,7 +73,7 @@ public class AudioDeviceManager : IDisposable, IMMNotificationClient
         try
         {
             var d = _enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia);
-            return new AudioDeviceInfo { Id = d.ID, FriendlyName = d.FriendlyName, IsVirtualCable = IsVirtual(d.FriendlyName) };
+            return new AudioDeviceInfo { Id = d.ID, FriendlyName = d.FriendlyName, IsVirtualCable = IsVirtual(d.FriendlyName), State = d.State };
         }
         catch { return null; }
     }

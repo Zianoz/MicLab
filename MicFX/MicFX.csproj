@@ -21,4 +21,15 @@
     <PackageReference Include="System.Text.Json" Version="8.*" />
   </ItemGroup>
 
+  <ItemGroup Condition="Exists('Native\\rnnoise.dll')">
+    <Content Include="Native\\rnnoise.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>rnnoise.dll</TargetPath>
+    </Content>
+  </ItemGroup>
+
+  <Target Name="WarnIfRnNoiseDllMissing" AfterTargets="Build" Condition="!Exists('Native\\rnnoise.dll')">
+    <Warning Text="RNNoise native binary missing. Place the x64 rnnoise.dll at Native\\rnnoise.dll and it will be copied to the output directory automatically." />
+  </Target>
+
 </Project>

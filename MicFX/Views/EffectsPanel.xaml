@@ -4,67 +4,252 @@
              xmlns:conv="clr-namespace:MicFX.Converters">
     <UserControl.Resources>
         <conv:DbDisplayConverter x:Key="DbDisplay"/>
+        <Style x:Key="ParamValue" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource AccentBrush}"/>
+            <Setter Property="FontSize" Value="10"/>
+            <Setter Property="Margin" Value="0,0,0,2"/>
+        </Style>
+        <Style x:Key="CardHeader" TargetType="TextBlock" BasedOn="{StaticResource SectionHeader}">
+            <Setter Property="Margin" Value="0,0,0,0"/>
+        </Style>
     </UserControl.Resources>
 
-    <UniformGrid Columns="2" Margin="8">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel>
 
-        <!-- NOISE GATE -->
-        <Border Margin="0,0,4,0" Padding="8" Background="{StaticResource SurfaceBrush}"
+        <!-- FILTERS BAR -->
+        <Border Margin="8,8,8,4" Padding="10" Background="{StaticResource SurfaceBrush}"
                 BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4">
             <StackPanel>
-                <TextBlock Text="NOISE GATE" Style="{StaticResource SectionHeader}"/>
+                <TextBlock Text="FILTERS" Style="{StaticResource CardHeader}" Margin="0,0,0,6"
+                           ToolTip="High-pass and low-pass filters shape the frequency edges of your mic signal before any other processing. HPF is almost always useful for voice."/>
+                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,8"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="16"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                <TextBlock Text="Threshold" Style="{StaticResource FieldLabel}"/>
-                <TextBlock Text="{Binding GateThresholdDb, Converter={StaticResource DbDisplay}}"
-                           Style="{StaticResource FieldLabel}" HorizontalAlignment="Right"/>
-                <Slider Minimum="-80" Maximum="0" Value="{Binding GateThresholdDb}"
-                        Style="{StaticResource DarkSlider}" Margin="0,0,0,6"/>
+                    <!-- HPF -->
+                    <StackPanel Grid.Column="0">
+                        <DockPanel Margin="0,0,0,4">
+                            <CheckBox IsChecked="{Binding HpfEnabled}" DockPanel.Dock="Right"
+                                      VerticalAlignment="Center"/>
+                            <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center"
+                                       Text="High-Pass" Style="{StaticResource FieldLabel}" Margin="0"
+                                       ToolTip="Cuts everything below the cutoff frequency. Removes desk rumble, handling noise, HVAC hum, and proximity-effect bass buildup. Start at 80 Hz and raise until your voice sounds clean without losing warmth."/>
+                        </DockPanel>
+                        <DockPanel Margin="0,0,0,2">
+                            <TextBlock DockPanel.Dock="Left" Text="Cutoff" Style="{StaticResource FieldLabel}"
+                                       Margin="0" VerticalAlignment="Center"/>
+                            <TextBlock Style="{StaticResource ParamValue}" DockPanel.Dock="Right"
+                                       Text="{Binding HpfCutoffHz, StringFormat={}{0:F0} Hz}"/>
+                        </DockPanel>
+                        <Slider Minimum="20" Maximum="500" Value="{Binding HpfCutoffHz}"
+                                IsEnabled="{Binding HpfEnabled}" Style="{StaticResource DarkSlider}"/>
+                    </StackPanel>
 
-                <TextBlock Text="Attack (ms)" Style="{StaticResource FieldLabel}"/>
-                <Slider Minimum="1" Maximum="200" Value="{Binding GateAttackMs}"
-                        Style="{StaticResource DarkSlider}" Margin="0,0,0,6"/>
-
-                <TextBlock Text="Hold (ms)" Style="{StaticResource FieldLabel}"/>
-                <Slider Minimum="0" Maximum="1000" Value="{Binding GateHoldMs}"
-                        Style="{StaticResource DarkSlider}" Margin="0,0,0,6"/>
-
-                <TextBlock Text="Release (ms)" Style="{StaticResource FieldLabel}"/>
-                <Slider Minimum="1" Maximum="500" Value="{Binding GateReleaseMs}"
-                        Style="{StaticResource DarkSlider}"/>
+                    <!-- LPF -->
+                    <StackPanel Grid.Column="2">
+                        <DockPanel Margin="0,0,0,4">
+                            <CheckBox IsChecked="{Binding LpfEnabled}" DockPanel.Dock="Right"
+                                      VerticalAlignment="Center"/>
+                            <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center"
+                                       Text="Low-Pass" Style="{StaticResource FieldLabel}" Margin="0"
+                                       ToolTip="Cuts everything above the cutoff frequency. Smooths harsh high-end, tames sibilance, and gives a warmer sound. Most voice needs all the way up to 18-20 kHz, so only use this if your mic sounds harsh or you want a specific tone."/>
+                        </DockPanel>
+                        <DockPanel Margin="0,0,0,2">
+                            <TextBlock DockPanel.Dock="Left" Text="Cutoff" Style="{StaticResource FieldLabel}"
+                                       Margin="0" VerticalAlignment="Center"/>
+                            <TextBlock Style="{StaticResource ParamValue}" DockPanel.Dock="Right"
+                                       Text="{Binding LpfCutoffHz, StringFormat={}{0:F0} Hz}"/>
+                        </DockPanel>
+                        <Slider Minimum="2000" Maximum="20000" Value="{Binding LpfCutoffHz}"
+                                IsEnabled="{Binding LpfEnabled}" Style="{StaticResource DarkSlider}"/>
+                    </StackPanel>
+                </Grid>
             </StackPanel>
         </Border>
 
-        <!-- COMPRESSOR -->
-        <Border Margin="4,0,0,0" Padding="8" Background="{StaticResource SurfaceBrush}"
-                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4">
-            <StackPanel>
-                <TextBlock Text="COMPRESSOR" Style="{StaticResource SectionHeader}"/>
+        <UniformGrid Columns="3" Margin="8,0,8,8">
 
-                <TextBlock Text="Threshold" Style="{StaticResource FieldLabel}"/>
-                <TextBlock Text="{Binding CompThresholdDb, Converter={StaticResource DbDisplay}}"
-                           Style="{StaticResource FieldLabel}" HorizontalAlignment="Right"/>
-                <Slider Minimum="-60" Maximum="0" Value="{Binding CompThresholdDb}"
-                        Style="{StaticResource DarkSlider}" Margin="0,0,0,6"/>
+            <Border Margin="0,0,4,0" Padding="10" Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,6">
+                        <TextBlock Text="NOISE SUPPRESSOR" Style="{StaticResource CardHeader}"
+                                   DockPanel.Dock="Left" VerticalAlignment="Center"
+                                   ToolTip="ML-based noise removal (RNNoise). Runs continuously and suppresses background noise including keyboard clicks, hiss, and room noise."/>
+                        <CheckBox IsChecked="{Binding NoiseSuppressorEnabled}"
+                                  HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,8"/>
 
-                <TextBlock Text="Ratio" Style="{StaticResource FieldLabel}"/>
-                <Slider Minimum="1" Maximum="20" Value="{Binding CompRatio}"
-                        Style="{StaticResource DarkSlider}" Margin="0,0,0,6"/>
+                    <DockPanel Margin="0,0,0,2">
+                        <TextBlock DockPanel.Dock="Left" Margin="0" VerticalAlignment="Center"
+                                   Text="Strength" Style="{StaticResource FieldLabel}"
+                                   ToolTip="Dry/wet blend between the denoised signal and your raw mic. 100% means fully denoised, 0% means bypass. Turn it down if the suppressor starts thinning your voice."/>
+                        <TextBlock Text="{Binding NoiseSuppressorStrength, StringFormat={}{0:P0}}"
+                                   Style="{StaticResource ParamValue}" DockPanel.Dock="Right"/>
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="1"
+                            Value="{Binding NoiseSuppressorStrength}"
+                            IsEnabled="{Binding NoiseSuppressorEnabled}"
+                            Style="{StaticResource DarkSlider}"/>
+                </StackPanel>
+            </Border>
 
-                <TextBlock Text="Attack (ms)" Style="{StaticResource FieldLabel}"/>
-                <Slider Minimum="1" Maximum="200" Value="{Binding CompAttackMs}"
-                        Style="{StaticResource DarkSlider}" Margin="0,0,0,6"/>
+            <Border Margin="4,0,4,0" Padding="10" Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,6">
+                        <TextBlock Text="SPEECH GATE" Style="{StaticResource CardHeader}"
+                                   DockPanel.Dock="Left" VerticalAlignment="Center"
+                                   ToolTip="Speech-aware expander after RNNoise. It keeps nearby speech more intact while pushing distant or muffled bleed toward a controlled floor instead of hard muting."/>
+                        <CheckBox IsChecked="{Binding GateEnabled}"
+                                  HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,8"/>
 
-                <TextBlock Text="Release (ms)" Style="{StaticResource FieldLabel}"/>
-                <Slider Minimum="1" Maximum="500" Value="{Binding CompReleaseMs}"
-                        Style="{StaticResource DarkSlider}" Margin="0,0,0,6"/>
+                    <DockPanel Margin="0,0,0,2">
+                        <TextBlock DockPanel.Dock="Left" Margin="0" VerticalAlignment="Center"
+                                   Text="Speech Threshold" Style="{StaticResource FieldLabel}"
+                                   ToolTip="How confident the detector must be before it treats a frame as your voice. Lower opens more easily. Higher rejects more bleed, but can miss quiet speech if pushed too far."/>
+                        <TextBlock Text="{Binding SpeechThreshold, StringFormat={}{0:P0}}"
+                                   Style="{StaticResource ParamValue}" DockPanel.Dock="Right"/>
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="1" Value="{Binding SpeechThreshold}"
+                            IsEnabled="{Binding GateEnabled}"
+                            Style="{StaticResource DarkSlider}" Margin="0,0,0,6"/>
 
-                <TextBlock Text="Makeup Gain" Style="{StaticResource FieldLabel}"/>
-                <TextBlock Text="{Binding CompMakeupGainDb, Converter={StaticResource DbDisplay}}"
-                           Style="{StaticResource FieldLabel}" HorizontalAlignment="Right"/>
-                <Slider Minimum="-12" Maximum="24" Value="{Binding CompMakeupGainDb}"
-                        Style="{StaticResource DarkSlider}"/>
-            </StackPanel>
-        </Border>
+                    <DockPanel Margin="0,0,0,2">
+                        <TextBlock DockPanel.Dock="Left" Margin="0" VerticalAlignment="Center"
+                                   Text="Close Voice Bias" Style="{StaticResource FieldLabel}"
+                                   ToolTip="How strongly the detector favors bright, near-field speech over dull, distant voices. Higher values help against voices through walls, but can be less forgiving with dark or off-axis mic tone."/>
+                        <TextBlock Text="{Binding CloseVoiceBias, StringFormat={}{0:P0}}"
+                                   Style="{StaticResource ParamValue}" DockPanel.Dock="Right"/>
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="1" Value="{Binding CloseVoiceBias}"
+                            IsEnabled="{Binding GateEnabled}"
+                            Style="{StaticResource DarkSlider}" Margin="0,0,0,6"/>
 
-    </UniformGrid>
+                    <DockPanel Margin="0,0,0,2">
+                        <TextBlock DockPanel.Dock="Left" Margin="0" VerticalAlignment="Center"
+                                   Text="Floor Attenuation" Style="{StaticResource FieldLabel}"
+                                   ToolTip="How far the gate turns non-speech down when closed. Higher values are more aggressive. Leaving some floor usually sounds more natural than full muting."/>
+                        <TextBlock Text="{Binding FloorAttenuationDb, Converter={StaticResource DbDisplay}}"
+                                   Style="{StaticResource ParamValue}" DockPanel.Dock="Right"/>
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="36" Value="{Binding FloorAttenuationDb}"
+                            IsEnabled="{Binding GateEnabled}"
+                            Style="{StaticResource DarkSlider}" Margin="0,0,0,6"/>
+
+                    <DockPanel Margin="0,0,0,2">
+                        <TextBlock DockPanel.Dock="Left" Margin="0" VerticalAlignment="Center"
+                                   Text="Attack (ms)" Style="{StaticResource FieldLabel}"
+                                   ToolTip="How fast the gate opens when speech is detected. Short attack preserves word starts. Longer attack smooths entry but can shave consonants."/>
+                        <TextBlock Text="{Binding GateAttackMs, StringFormat={}{0:F0}}"
+                                   Style="{StaticResource ParamValue}" DockPanel.Dock="Right"/>
+                    </DockPanel>
+                    <Slider Minimum="1" Maximum="200" Value="{Binding GateAttackMs}"
+                            IsEnabled="{Binding GateEnabled}"
+                            Style="{StaticResource DarkSlider}" Margin="0,0,0,6"/>
+
+                    <DockPanel Margin="0,0,0,2">
+                        <TextBlock DockPanel.Dock="Left" Margin="0" VerticalAlignment="Center"
+                                   Text="Hold (ms)" Style="{StaticResource FieldLabel}"
+                                   ToolTip="How long the gate stays open after confidence drops. Increase this to prevent chatter between syllables or short pauses."/>
+                        <TextBlock Text="{Binding GateHoldMs, StringFormat={}{0:F0}}"
+                                   Style="{StaticResource ParamValue}" DockPanel.Dock="Right"/>
+                    </DockPanel>
+                    <Slider Minimum="0" Maximum="1000" Value="{Binding GateHoldMs}"
+                            IsEnabled="{Binding GateEnabled}"
+                            Style="{StaticResource DarkSlider}" Margin="0,0,0,6"/>
+
+                    <DockPanel Margin="0,0,0,2">
+                        <TextBlock DockPanel.Dock="Left" Margin="0" VerticalAlignment="Center"
+                                   Text="Release (ms)" Style="{StaticResource FieldLabel}"
+                                   ToolTip="How fast the gate falls back toward the attenuation floor after hold expires. Short release rejects more aggressively. Longer release sounds smoother and less grabby."/>
+                        <TextBlock Text="{Binding GateReleaseMs, StringFormat={}{0:F0}}"
+                                   Style="{StaticResource ParamValue}" DockPanel.Dock="Right"/>
+                    </DockPanel>
+                    <Slider Minimum="1" Maximum="500" Value="{Binding GateReleaseMs}"
+                            IsEnabled="{Binding GateEnabled}"
+                            Style="{StaticResource DarkSlider}"/>
+                </StackPanel>
+            </Border>
+
+            <Border Margin="4,0,0,0" Padding="10" Background="{StaticResource SurfaceBrush}"
+                    BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4">
+                <StackPanel>
+                    <DockPanel Margin="0,0,0,6">
+                        <TextBlock Text="COMPRESSOR" Style="{StaticResource CardHeader}"
+                                   DockPanel.Dock="Left" VerticalAlignment="Center"
+                                   ToolTip="A compressor automatically turns down loud peaks to even out your volume so sudden shouts do not jump out while quieter speech stays usable."/>
+                        <CheckBox IsChecked="{Binding CompressorEnabled}"
+                                  HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                    </DockPanel>
+                    <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,8"/>
+
+                    <DockPanel Margin="0,0,0,2">
+                        <TextBlock DockPanel.Dock="Left" Margin="0" VerticalAlignment="Center"
+                                   Text="Threshold" Style="{StaticResource FieldLabel}"
+                                   ToolTip="Volume level above which compression kicks in. Lower means more of your signal gets compressed. Higher means only louder peaks are reduced."/>
+                        <TextBlock Text="{Binding CompThresholdDb, Converter={StaticResource DbDisplay}}"
+                                   Style="{StaticResource ParamValue}" DockPanel.Dock="Right"/>
+                    </DockPanel>
+                    <Slider Minimum="-60" Maximum="0" Value="{Binding CompThresholdDb}"
+                            IsEnabled="{Binding CompressorEnabled}"
+                            Style="{StaticResource DarkSlider}" Margin="0,0,0,6"/>
+
+                    <DockPanel Margin="0,0,0,2">
+                        <TextBlock DockPanel.Dock="Left" Margin="0" VerticalAlignment="Center"
+                                   Text="Ratio" Style="{StaticResource FieldLabel}"
+                                   ToolTip="How hard the compressor clamps. Higher values sound flatter and more controlled. Very high values approach limiter behavior."/>
+                        <TextBlock Text="{Binding CompRatio, StringFormat={}{0:F1}x}"
+                                   Style="{StaticResource ParamValue}" DockPanel.Dock="Right"/>
+                    </DockPanel>
+                    <Slider Minimum="1" Maximum="20" Value="{Binding CompRatio}"
+                            IsEnabled="{Binding CompressorEnabled}"
+                            Style="{StaticResource DarkSlider}" Margin="0,0,0,6"/>
+
+                    <DockPanel Margin="0,0,0,2">
+                        <TextBlock DockPanel.Dock="Left" Margin="0" VerticalAlignment="Center"
+                                   Text="Attack (ms)" Style="{StaticResource FieldLabel}"
+                                   ToolTip="How fast the compressor reacts when you exceed the threshold. Slower attack keeps more natural punch. Faster attack catches peaks immediately."/>
+                        <TextBlock Text="{Binding CompAttackMs, StringFormat={}{0:F0}}"
+                                   Style="{StaticResource ParamValue}" DockPanel.Dock="Right"/>
+                    </DockPanel>
+                    <Slider Minimum="1" Maximum="200" Value="{Binding CompAttackMs}"
+                            IsEnabled="{Binding CompressorEnabled}"
+                            Style="{StaticResource DarkSlider}" Margin="0,0,0,6"/>
+
+                    <DockPanel Margin="0,0,0,2">
+                        <TextBlock DockPanel.Dock="Left" Margin="0" VerticalAlignment="Center"
+                                   Text="Release (ms)" Style="{StaticResource FieldLabel}"
+                                   ToolTip="How fast the compressor lets go after the signal falls back below threshold. Too short can pump. Too long can keep the next word squashed."/>
+                        <TextBlock Text="{Binding CompReleaseMs, StringFormat={}{0:F0}}"
+                                   Style="{StaticResource ParamValue}" DockPanel.Dock="Right"/>
+                    </DockPanel>
+                    <Slider Minimum="1" Maximum="500" Value="{Binding CompReleaseMs}"
+                            IsEnabled="{Binding CompressorEnabled}"
+                            Style="{StaticResource DarkSlider}" Margin="0,0,0,6"/>
+
+                    <DockPanel Margin="0,0,0,2">
+                        <TextBlock DockPanel.Dock="Left" Margin="0" VerticalAlignment="Center"
+                                   Text="Makeup Gain" Style="{StaticResource FieldLabel}"
+                                   ToolTip="Compression lowers peaks, so makeup gain adds level back afterward. Raise it until the processed signal lands where you want it overall."/>
+                        <TextBlock Text="{Binding CompMakeupGainDb, Converter={StaticResource DbDisplay}}"
+                                   Style="{StaticResource ParamValue}" DockPanel.Dock="Right"/>
+                    </DockPanel>
+                    <Slider Minimum="-12" Maximum="24" Value="{Binding CompMakeupGainDb}"
+                            IsEnabled="{Binding CompressorEnabled}"
+                            Style="{StaticResource DarkSlider}"/>
+                </StackPanel>
+            </Border>
+
+        </UniformGrid>
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>

@@ -15,7 +15,7 @@ public class SplitSampleProvider : IDisposable
     private readonly ISampleProvider _source;
     private float[] _sharedBuffer = Array.Empty<float>();
     private int _sharedCount;
-    private int _consumersRead; // how many of the 2 consumers have read this chunk
+    private int _servedMask; // bit 0 = monitor, bit 1 = cable
     private readonly object _lock = new();
 
     public ISampleProvider MonitorOutput { get; }
@@ -30,21 +30,37 @@ public class SplitSampleProvider : IDisposable
 
     private int ReadForConsumer(int consumerId, float[] buffer, int offset, int count)
     {
+        ArgumentNullException.ThrowIfNull(buffer);
+        ArgumentOutOfRangeException.ThrowIfNegative(offset);
+        ArgumentOutOfRangeException.ThrowIfNegative(count);
+
+        if (buffer.Length - offset < count)
+            throw new ArgumentException("The destination buffer is too small for the requested read.", nameof(buffer));
+
         lock (_lock)
         {
-            // If we haven't read new data yet, pull from source
-            if (_consumersRead == 0 || _consumersRead == 2)
+            int consumerBit = 1 << consumerId;
+
+            // Read a new chunk if:
+            // 1. We have no current audio,
+            // 2. Both consumers already saw the current chunk, or
+            // 3. This consumer already saw it and wants fresh data again.
+            if (_sharedCount == 0 || _servedMask == 0b11 || (_servedMask & consumerBit) != 0)
             {
                 if (_sharedBuffer.Length < count)
                     _sharedBuffer = new float[count];
 
                 _sharedCount = _source.Read(_sharedBuffer, 0, count);
-                _consumersRead = 0;
+                _servedMask = 0;
+                if (_sharedCount == 0)
+                    return 0;
             }
 
             int toCopy = Math.Min(count, _sharedCount);
-            Array.Copy(_sharedBuffer, 0, buffer, offset, toCopy);
-            _consumersRead++;
+            for (int i = 0; i < toCopy; i++)
+                buffer[offset + i] = _sharedBuffer[i];
+
+            _servedMask |= consumerBit;
             return toCopy;
         }
     }

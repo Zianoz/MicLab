@@ -3,6 +3,8 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using MicFX.DSP;
 using MicFX.ViewModels;
+using Point = System.Windows.Point;
+using Vector = System.Windows.Vector;
 
 namespace MicFX.Views;
 
@@ -12,6 +14,7 @@ public partial class EqPanel : System.Windows.Controls.UserControl
     {
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
+        SizeChanged += (_, _) => UpdateCurve();
     }
 
     private EqViewModel? _vm;
@@ -37,48 +40,59 @@ public partial class EqPanel : System.Windows.Controls.UserControl
 
     private void DrawCurve(float[] gains)
     {
-        double width = EqCurveCanvas.ActualWidth;
-        double height = EqCurveCanvas.ActualHeight;
-        if (width <= 0 || height <= 0) return;
+        double w = EqCurveCanvas.ActualWidth;
+        double h = EqCurveCanvas.ActualHeight;
+        if (w <= 0 || h <= 0) return;
 
-        // Simple linear interpolation between band gains for the display curve
         float[] freqs = EqProcessor.BandFrequencies;
+        int n = freqs.Length;
+
         double minLog = Math.Log10(20);
         double maxLog = Math.Log10(20000);
+        double mid = h / 2;
 
-        var points = new PointCollection();
-        int steps = (int)width;
-
-        for (int px = 0; px < steps; px++)
+        // Convert each band to a pixel-space knot point
+        var pts = new Point[n];
+        for (int i = 0; i < n; i++)
         {
-            double logF = minLog + (maxLog - minLog) * px / (steps - 1);
-            double f = Math.Pow(10, logF);
-
-            // Interpolate gain: find the nearest bands
-            double gain = InterpolateGain(f, freqs, gains);
-
-            // Map gain (-12 to +12) to Y (0 = top = +12, height = bottom = -12)
-            double y = height / 2 - (gain / 12.0) * (height / 2);
-            points.Add(new System.Windows.Point(px, y));
+            double px = (Math.Log10(freqs[i]) - minLog) / (maxLog - minLog) * w;
+            double py = Math.Clamp(mid - (gains[i] / 12.0) * mid, 0, h);
+            pts[i] = new Point(px, py);
         }
 
-        EqCurveLine.Points = points;
-    }
+        // Catmull-Rom tangents (non-uniform chord-length weighting)
+        var tan = new Vector[n];
+        tan[0] = pts[1] - pts[0];
+        tan[n - 1] = pts[n - 1] - pts[n - 2];
+        for (int i = 1; i < n - 1; i++)
+            tan[i] = (pts[i + 1] - pts[i - 1]) / 2;
 
-    private static double InterpolateGain(double freq, float[] freqs, float[] gains)
-    {
-        if (freq <= freqs[0]) return gains[0];
-        if (freq >= freqs[^1]) return gains[^1];
-
-        for (int i = 0; i < freqs.Length - 1; i++)
+        // Build smooth curve: flat lead-in → Bezier segments → flat lead-out
+        var curveFigure = new PathFigure { StartPoint = new Point(0, pts[0].Y), IsClosed = false };
+        curveFigure.Segments.Add(new LineSegment(pts[0], true));
+        for (int i = 0; i < n - 1; i++)
         {
-            if (freq >= freqs[i] && freq <= freqs[i + 1])
-            {
-                double t = (Math.Log10(freq) - Math.Log10(freqs[i]))
-                         / (Math.Log10(freqs[i + 1]) - Math.Log10(freqs[i]));
-                return gains[i] + t * (gains[i + 1] - gains[i]);
-            }
+            var cp1 = pts[i]     + tan[i]     / 3;
+            var cp2 = pts[i + 1] - tan[i + 1] / 3;
+            curveFigure.Segments.Add(new BezierSegment(cp1, cp2, pts[i + 1], true));
         }
-        return 0;
+        curveFigure.Segments.Add(new LineSegment(new Point(w, pts[n - 1].Y), true));
+
+        EqCurvePath.Data = new PathGeometry(new PathFigureCollection { curveFigure });
+
+        // Fill: same curve closed back along the 0 dB centre line
+        var fillFigure = new PathFigure { StartPoint = new Point(0, mid), IsClosed = true };
+        fillFigure.Segments.Add(new LineSegment(new Point(0, pts[0].Y), false));
+        fillFigure.Segments.Add(new LineSegment(pts[0], false));
+        for (int i = 0; i < n - 1; i++)
+        {
+            var cp1 = pts[i]     + tan[i]     / 3;
+            var cp2 = pts[i + 1] - tan[i + 1] / 3;
+            fillFigure.Segments.Add(new BezierSegment(cp1, cp2, pts[i + 1], false));
+        }
+        fillFigure.Segments.Add(new LineSegment(new Point(w, pts[n - 1].Y), false));
+        fillFigure.Segments.Add(new LineSegment(new Point(w, mid), false));
+
+        EqCurveFill.Data = new PathGeometry(new PathFigureCollection { fillFigure });
     }
 }
