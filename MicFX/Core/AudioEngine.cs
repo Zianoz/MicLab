@@ -103,6 +103,8 @@ public class AudioEngine : IDisposable
 
     public void SetMonitorVolume(float volume) => _pipeline?.SetMonitorVolume(volume);
 
+    public void SetInputGainDb(float db) => Effects?.SetInputGainDb(db);
+
     public void Stop()
     {
         lock (_stateLock)

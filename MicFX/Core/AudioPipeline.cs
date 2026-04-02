@@ -17,7 +17,7 @@ public class AudioPipeline : IDisposable
     private WasapiOut? _monitorOut;
     private WasapiOut? _cableOut;
     private BufferedWaveProvider? _buffer;
-    private VolumeSampleProvider? _monitorVolumeProvider;
+    private MonitorGainSampleProvider? _monitorVolumeProvider;
 
     /// <summary>Inject DSP processors. Source -> returns processed chain head.</summary>
     public Func<ISampleProvider, ISampleProvider>? BuildChain { get; set; }
@@ -51,7 +51,7 @@ public class AudioPipeline : IDisposable
         _firstDataReceived = false;
         _buffer = new BufferedWaveProvider(_capture.WaveFormat)
         {
-            BufferDuration = TimeSpan.FromMilliseconds(500),
+            BufferDuration = TimeSpan.FromMilliseconds(100),
             DiscardOnBufferOverflow = true
         };
 
@@ -84,7 +84,7 @@ public class AudioPipeline : IDisposable
             monitorSource = CreateRenderSource(levelMeter, monitorDevice);
         }
 
-        _monitorVolumeProvider = new VolumeSampleProvider(monitorSource) { Volume = monitorVolume };
+        _monitorVolumeProvider = new MonitorGainSampleProvider(monitorSource) { Gain = monitorVolume };
         _monitorOut = new WasapiOut(monitorDevice, AudioClientShareMode.Shared, true, 10);
         _monitorOut.PlaybackStopped += OnPlaybackStopped;
         _monitorOut.Init(_monitorVolumeProvider);
@@ -99,7 +99,7 @@ public class AudioPipeline : IDisposable
     public void SetMonitorVolume(float volume)
     {
         if (_monitorVolumeProvider != null)
-            _monitorVolumeProvider.Volume = volume;
+            _monitorVolumeProvider.Gain = volume;
     }
 
     public void Stop()
@@ -152,7 +152,7 @@ public class AudioPipeline : IDisposable
 
     private static WasapiCapture CreateCapture(MMDevice inputDevice)
     {
-        return new WasapiCapture(inputDevice, false, 100)
+        return new WasapiCapture(inputDevice, false, 20)
         {
             ShareMode = AudioClientShareMode.Shared
         };
@@ -200,12 +200,14 @@ public class AudioPipeline : IDisposable
         if (frameCount <= 0)
             return;
 
+        var samples = System.Runtime.InteropServices.MemoryMarshal.Cast<byte, float>(
+            new ReadOnlySpan<byte>(buffer, 0, bytesRecorded));
+
         float sumSq = 0f;
         float peak = 0f;
         for (int frame = 0; frame < frameCount; frame++)
         {
-            float sample = BitConverter.ToSingle(buffer, frame * channels * sizeof(float));
-            float abs = MathF.Abs(sample);
+            float abs = MathF.Abs(samples[frame * channels]);
             sumSq += abs * abs;
             if (abs > peak)
                 peak = abs;
@@ -292,4 +294,35 @@ public class AudioPipeline : IDisposable
     }
 
     public void Dispose() => Stop();
+
+    /// <summary>
+    /// Linear gain below unity; tanh soft saturation above — avoids harsh WASAPI hard-clipping
+    /// when the user boosts the monitor above 100%.
+    /// </summary>
+    private sealed class MonitorGainSampleProvider : ISampleProvider
+    {
+        private readonly ISampleProvider _source;
+        public WaveFormat WaveFormat => _source.WaveFormat;
+        public float Gain { get; set; } = 1f;
+
+        public MonitorGainSampleProvider(ISampleProvider source) => _source = source;
+
+        public int Read(float[] buffer, int offset, int count)
+        {
+            int read = _source.Read(buffer, offset, count);
+            float gain = Gain;
+            if (gain <= 1.0f)
+            {
+                for (int i = offset; i < offset + read; i++)
+                    buffer[i] *= gain;
+            }
+            else
+            {
+                // Amplify then soft-clip via tanh so peaks saturate smoothly to ±1
+                for (int i = offset; i < offset + read; i++)
+                    buffer[i] = MathF.Tanh(buffer[i] * gain);
+            }
+            return read;
+        }
+    }
 }

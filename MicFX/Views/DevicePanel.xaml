@@ -75,7 +75,7 @@
                                    FontWeight="SemiBold"
                                    DockPanel.Dock="Right"/>
                     </DockPanel>
-                    <Slider Minimum="0" Maximum="1"
+                    <Slider Minimum="0" Maximum="2"
                             Value="{Binding MonitorVolume}"
                             Style="{StaticResource DarkSlider}"
                             IsEnabled="{Binding MonitorMuted, Converter={StaticResource InvBool}}"

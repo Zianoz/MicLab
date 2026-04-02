@@ -17,6 +17,25 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
         <StackPanel>
 
+        <!-- INPUT GAIN -->
+        <Border Margin="8,8,8,4" Padding="10" Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4">
+            <StackPanel>
+                <TextBlock Text="INPUT GAIN" Style="{StaticResource CardHeader}" Margin="0,0,0,6"
+                           ToolTip="Boosts or attenuates your raw mic signal before any processing. Use this to compensate for a quiet mic or to back off a mic that's too hot. Above 0 dB uses soft saturation to avoid hard clipping."/>
+                <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Margin="0,0,0,8"/>
+                <DockPanel Margin="0,0,0,2">
+                    <TextBlock DockPanel.Dock="Left" VerticalAlignment="Center"
+                               Text="Sensitivity" Style="{StaticResource FieldLabel}"
+                               ToolTip="Raise this if your mic is too quiet. Lower it if your mic is too loud or causing downstream processing to clip."/>
+                    <TextBlock Text="{Binding InputGainDb, Converter={StaticResource DbDisplay}}"
+                               Style="{StaticResource ParamValue}" DockPanel.Dock="Right"/>
+                </DockPanel>
+                <Slider Minimum="-20" Maximum="20" Value="{Binding InputGainDb}"
+                        Style="{StaticResource DarkSlider}" Margin="0,0,0,0"/>
+            </StackPanel>
+        </Border>
+
         <!-- FILTERS BAR -->
         <Border Margin="8,8,8,4" Padding="10" Background="{StaticResource SurfaceBrush}"
                 BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="4">
@@ -115,7 +134,7 @@
                     <DockPanel Margin="0,0,0,2">
                         <TextBlock DockPanel.Dock="Left" Margin="0" VerticalAlignment="Center"
                                    Text="Speech Threshold" Style="{StaticResource FieldLabel}"
-                                   ToolTip="How confident the detector must be before it treats a frame as your voice. Lower opens more easily. Higher rejects more bleed, but can miss quiet speech if pushed too far."/>
+                                   ToolTip="How confident the detector must be before it opens the gate. This does NOT scale your volume — it controls whether you pass through at all. Set too high: your speech scores below the threshold and gets gated out (making you quiet). Set too low: background noise leaks through. If the gate is making you quiet, lower this or use Input Gain to boost your mic level so your voice scores higher."/>
                         <TextBlock Text="{Binding SpeechThreshold, StringFormat={}{0:P0}}"
                                    Style="{StaticResource ParamValue}" DockPanel.Dock="Right"/>
                     </DockPanel>

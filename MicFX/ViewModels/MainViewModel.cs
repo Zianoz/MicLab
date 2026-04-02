@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MicFX.Core;
@@ -15,6 +16,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string _startStopLabel = "Start";
     [ObservableProperty] private string? _activePresetName;
     [ObservableProperty] private string? _statusMessage;
+    [ObservableProperty] private bool _runAtStartup = true;
 
     public DeviceViewModel DeviceVM { get; }
     public EqViewModel EqVM { get; } = new();
@@ -46,6 +48,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         LoadSettingsOnStartup();
         RefreshPresetList();
+
+        // Auto-start audio engine after the window is shown
+        System.Windows.Application.Current.Dispatcher.BeginInvoke(StartStop, DispatcherPriority.Loaded);
     }
 
     private void LoadSettingsOnStartup()
@@ -86,6 +91,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         EqVM.LpfEnabled  = settings.Filters.LpfEnabled;
         EqVM.LpfCutoffHz = settings.Filters.LpfCutoffHz;
 
+        // Restore input gain
+        EqVM.InputGainDb = settings.InputGainDb;
+
         // Restore noise suppressor
         EqVM.NoiseSuppressorEnabled  = settings.NoiseSuppressorEnabled;
         EqVM.NoiseSuppressorStrength = settings.NoiseSuppressorStrength;
@@ -95,6 +103,17 @@ public partial class MainViewModel : ObservableObject, IDisposable
         DeviceVM.MonitorMuted  = settings.MonitorMuted;
 
         ActivePresetName = settings.ActivePresetName;
+        RunAtStartup = settings.RunAtStartup;
+        StartupService.Sync(RunAtStartup);
+
+        if (!string.IsNullOrWhiteSpace(ActivePresetName))
+            LoadPreset();
+    }
+
+    partial void OnRunAtStartupChanged(bool value)
+    {
+        StartupService.Sync(value);
+        SettingsService.SaveSettings(BuildCurrentSettings());
     }
 
     private static void MigrateLegacyAudioDefaults(AppSettings settings)
@@ -125,6 +144,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
         MonitorDeviceName = DeviceVM.SelectedMonitor?.FriendlyName,
         MonitorVolume    = DeviceVM.MonitorVolume,
         MonitorMuted     = DeviceVM.MonitorMuted,
+        InputGainDb      = EqVM.InputGainDb,
         NoiseSuppressorEnabled  = EqVM.NoiseSuppressorEnabled,
         NoiseSuppressorStrength = EqVM.NoiseSuppressorStrength,
         Filters = new FilterSettings
@@ -156,6 +176,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             MakeupGainDb = EqVM.CompMakeupGainDb,
         },
         ActivePresetName = ActivePresetName,
+        RunAtStartup = RunAtStartup,
     };
 
     [RelayCommand]

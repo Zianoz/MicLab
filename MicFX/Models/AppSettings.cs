@@ -10,6 +10,7 @@ public class AppSettings
     public string? MonitorDeviceName { get; set; }
     public float MonitorVolume { get; set; } = 0.8f;
     public bool MonitorMuted { get; set; } = false;
+    public float InputGainDb { get; set; } = 0f;
     public bool  NoiseSuppressorEnabled  { get; set; } = true;
     public float NoiseSuppressorStrength { get; set; } = 0.45f;
     public float[] EqGains { get; set; } = new float[10];
@@ -17,6 +18,7 @@ public class AppSettings
     public NoiseGateSettings NoiseGate { get; set; } = new();
     public CompressorSettings Compressor { get; set; } = new();
     public string? ActivePresetName { get; set; }
+    public bool RunAtStartup { get; set; } = true;
     public double WindowLeft { get; set; } = double.NaN;
     public double WindowTop { get; set; } = double.NaN;
     public double WindowWidth { get; set; } = 960;

@@ -123,6 +123,12 @@
 
         <Border Grid.Row="4" Style="{StaticResource CardBorder}" Padding="14,10">
             <DockPanel>
+                <CheckBox DockPanel.Dock="Right"
+                          IsChecked="{Binding RunAtStartup}"
+                          VerticalAlignment="Center"
+                          Foreground="{StaticResource TextSecondaryBrush}"
+                          Content="Run at startup"
+                          Margin="12,0,0,0"/>
                 <Ellipse DockPanel.Dock="Left"
                          Width="8"
                          Height="8"

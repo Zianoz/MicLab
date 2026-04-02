@@ -58,6 +58,11 @@ public partial class EqViewModel : ObservableObject
     /// <summary>Raised whenever any band gain changes (for curve redraw).</summary>
     public event Action? BandsChanged;
 
+    // ── Input Gain ────────────────────────────────────────────────────────────
+    [ObservableProperty] private float _inputGainDb = 0f;
+
+    partial void OnInputGainDbChanged(float value) => _engine?.SetInputGainDb(value);
+
     // ── Noise Suppressor ─────────────────────────────────────────────────────
     [ObservableProperty] private bool  _noiseSuppressorEnabled  = true;
     [ObservableProperty] private float _noiseSuppressorStrength = 0.45f;
@@ -123,6 +128,7 @@ public partial class EqViewModel : ObservableObject
             foreach (var band in Bands)
                 _engine.Eq.SetBandGain(band.BandIndex, band.GainDb);
 
+        _engine?.SetInputGainDb(InputGainDb);
         _engine?.Filters?.ApplyHpf(HpfEnabled, HpfCutoffHz);
         _engine?.Filters?.ApplyLpf(LpfEnabled, LpfCutoffHz);
         _engine?.NoiseSuppressor?.ApplyParams(NoiseSuppressorEnabled, NoiseSuppressorStrength);
